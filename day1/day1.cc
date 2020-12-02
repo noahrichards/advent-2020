@@ -1,8 +1,8 @@
 #include <fstream>
-#include <iostream>
 
 #include "absl/container/flat_hash_set.h"
-#include "absl/strings/str_format.h"
+#include "absl/strings/substitute.h"
+#include "glog/logging.h"
 
 constexpr int kTotal = 2020;
 
@@ -10,13 +10,13 @@ void DoPart1(const absl::flat_hash_set<int>& numbers) {
   for (int i : numbers) {
     int other = kTotal - i;
     if (numbers.count(other) > 0) {
-      std::cout << absl::StrFormat("PART1: Found: %d and %d, mult: %d", i,
-                                   other, i * other)
-                << std::endl;
+      LOG(INFO) << absl::Substitute("PART1: Found: $0 and $1, mult: $2", i,
+                                    other, i * other);
       return;
     }
   }
-  std::cerr << "PART1: NOT FOUND" << std::endl;
+
+  LOG(ERROR) << "PART1: NOT FOUND";
 }
 
 void DoPart2(const absl::flat_hash_set<int>& numbers) {
@@ -25,9 +25,8 @@ void DoPart2(const absl::flat_hash_set<int>& numbers) {
       if (i == j) continue;
       int other = kTotal - i - j;
       if (numbers.count(other) > 0) {
-        std::cout << absl::StrFormat("PART2: Found: %d/%d/%d, mult: %d", i, j,
-                                     other, i * j * other)
-                  << std::endl;
+        LOG(INFO) << absl::Substitute("PART2: Found: $0/$1/$2, mult: $3", i, j,
+                                      other, i * j * other);
         return;
       }
     }
@@ -35,8 +34,13 @@ void DoPart2(const absl::flat_hash_set<int>& numbers) {
 }
 
 int main(int argc, char** argv) {
+  google::InitGoogleLogging(argv[0]);
+  google::InstallFailureSignalHandler();
+  FLAGS_logtostderr = 1;
+
   absl::flat_hash_set<int> numbers;
   std::ifstream file(argv[1]);
+  CHECK(file);
 
   int in;
   while (file >> in) {
