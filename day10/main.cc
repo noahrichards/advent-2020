@@ -14,6 +14,27 @@ typedef absl::flat_hash_set<int> AdapterSet;
 
 absl::flat_hash_map<int, int64_t> memo;
 
+int64_t CountPathsLinear(const Adapters& adapters) {
+  int max = adapters[adapters.size() - 1];
+  std::vector<int64_t> path_counts(max + 3, 0);
+
+  // This is basically generating the memo in reverse. You know the very last
+  // adapter has only one path, and then you walk backwards through adapters and
+  // generate the number of paths by adding up the valid paths it can reach.
+  //
+  // If you observe how the memoized recursive function works in practice, it's
+  // sorta doing the same thing: calculating paths at the end, tail-recursing
+  // (almost) those values towards the start of the array.
+  path_counts[max] = 1;
+  for (int i = adapters.size() - 2; i >= 0; --i) {
+    int adapter = adapters[i];
+    path_counts[adapter] = path_counts[adapter + 1] + path_counts[adapter + 2] +
+                           path_counts[adapter + 3];
+  }
+  // So the total is what's reachable from 0, which is 1 + 2 + 3.
+  return path_counts[1] + path_counts[2] + path_counts[3];
+}
+
 int64_t CountPaths(AdapterSet adapters, int start, int end) {
   if (start == end) {
     return 1;
@@ -68,5 +89,6 @@ int main(int argc, char** argv) {
   AdapterSet adapter_set(adapters.begin(), adapters.end());
   LOG(INFO) << "PART 2: "
             << CountPaths(adapter_set, 0, adapters[adapters.size() - 1]);
+  LOG(INFO) << "PART 2 linear: " << CountPathsLinear(adapters);
   return 0;
 }
