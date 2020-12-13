@@ -22,23 +22,24 @@ bool AllPredsTrue(const std::vector<std::function<bool(int64_t)>>& preds,
 }
 
 // From https://rosettacode.org/wiki/Chinese_remainder_theorem#C.2B.2B
-template <typename _Ty>
-_Ty MulInv(_Ty a, _Ty b) {
-  _Ty b0 = b;
-  _Ty x0 = 0;
-  _Ty x1 = 1;
+// Solve for x in "(a * x) % b == 1"
+template <typename T>
+T MulInv(T a, T b) {
+  T b0 = b;
+  T x0 = 0;
+  T x1 = 1;
 
   if (b == 1) {
     return 1;
   }
 
   while (a > 1) {
-    _Ty q = a / b;
-    _Ty amb = a % b;
+    T q = a / b;
+    T amb = a % b;
     a = b;
     b = amb;
 
-    _Ty xqx = x1 - q * x0;
+    T xqx = x1 - q * x0;
     x1 = x0;
     x0 = xqx;
   }
@@ -51,14 +52,16 @@ _Ty MulInv(_Ty a, _Ty b) {
 }
 
 // From https://rosettacode.org/wiki/Chinese_remainder_theorem#C.2B.2B
-template <typename _Ty>
-_Ty ChineseRemainder(std::vector<_Ty> n, std::vector<_Ty> a) {
-  _Ty prod = std::reduce(n.begin(), n.end(), (_Ty)1,
-                         [](_Ty a, _Ty b) { return a * b; });
+// Solve for x given a list of equations of the form:
+// x = a mod n
+template <typename T>
+T ChineseRemainder(std::vector<T> n, std::vector<T> a) {
+  // Multiple all the ns so we can solve mod <product>.
+  T prod = std::reduce(n.begin(), n.end(), 1, [](T a, T b) { return a * b; });
 
-  _Ty sm = 0;
+  T sm = 0;
   for (int i = 0; i < n.size(); i++) {
-    _Ty p = prod / n[i];
+    T p = prod / n[i];
     sm += a[i] * MulInv(p, n[i]) * p;
   }
 
@@ -101,8 +104,13 @@ int main(int argc, char** argv) {
   }
   LOG(INFO) << "PART 1: " << bus_id * min_distance;
 
-  // Part 2: lets try some chinese remainder theorem.
-  // Taken from rosettacode.org, because math is hard.
+  // Part 2: lets try some chinese remainder theorem, because that's what the
+  // subreddit folks hinted at. This is an obnoxious "gotcha" problem that you
+  // can't reasonably solve with brute force (estimates are anywhere from 2-70
+  // days, on the subreddit).
+  // I don't actually know the math for this, so I took it from rosettacode.org.
+  // This isn't a "programming" problem, this is a "do you recognize a math
+  // identity" problem.
   std::vector<int64_t> a;
   std::vector<int64_t> n;
   for (int64_t i = 0; i < bus_strings.size(); ++i) {
